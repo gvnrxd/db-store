@@ -1,0 +1,804 @@
+openapi: 3.0.3
+info:
+  title: DB Store - OpenAPI 3.0
+  description: This is the API for the DB store
+  termsOfService: https://swagger.io/terms/
+  contact:
+    email: raymonddigtal.dev@gmail.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.12
+externalDocs:
+  description: Find out more about Db Store
+  url: https://github.com/gvnrxd/db-store
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+tags:
+  - name: products
+    description: Prodcuts management
+  - name: users
+    description: Operations about users
+  - name: auth
+    description: Authentication and authorization operations
+paths:
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: Log in a user
+      operationId: authLoginPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/auth_login_body"
+        required: true
+      responses:
+        "200":
+          description: Login successful
+        "401":
+          description: Invalid credentials
+        "500":
+          description: Server error
+      x-swagger-router-controller: Auth
+  /auth/register:
+    post:
+      tags:
+        - auth
+      summary: Register a new user
+      operationId: authRegisterPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/auth_register_body"
+        required: true
+      responses:
+        "201":
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_201"
+        "400":
+          description: Bad request (validation error)
+        "409":
+          description: Username or email already exists
+        "500":
+          description: Internal server error
+      x-swagger-router-controller: Auth
+  /auth/logout:
+    post:
+      tags:
+        - auth
+      summary: Logout the current user
+      description: Logs out the user. The client must delete the stored JWT token.
+      operationId: authLogoutPOST
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200"
+      x-swagger-router-controller: Auth
+  /auth/refresh:
+    post:
+      tags:
+        - auth
+      summary: Refresh access token
+      description: Issues a new access token using a valid refresh token.
+      operationId: authRefreshPOST
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/auth_refresh_body"
+        required: true
+      responses:
+        "200":
+          description: New access token issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200_1"
+        "401":
+          description: Invalid or expired refresh token
+        "500":
+          description: Server error
+      x-swagger-router-controller: Auth
+  /users:
+    get:
+      tags:
+        - users
+      summary: Retrieve all user accounts
+      description: Retrieves users from the database. Defaults to 10 users.
+      operationId: usersGET
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of users to return
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: integer
+            maximum: 100
+            example: 10
+            default: 10
+      responses:
+        "200":
+          description: List of users retrieved successfully
+          content:
+            application/json:
+              schema:
+                maxItems: 10
+                type: array
+                items:
+                  $ref: "#/components/schemas/inline_response_200_2"
+                x-content-type: application/json
+      x-swagger-router-controller: Users
+  /users/{id}:
+    get:
+      tags:
+        - users
+      summary: Retrieve a specific user
+      description: Retrieve a specific user from the database by id
+      operationId: usersIdGET
+      parameters:
+        - name: id
+          in: path
+          description: ID of the user to retrieve
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: User trieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200_3"
+        "404":
+          description: User not found
+        "500":
+          description: Server error
+      x-swagger-router-controller: Users
+    delete:
+      tags:
+        - users
+      summary: Delete a specific user
+      operationId: usersIdDELETE
+      parameters:
+        - name: id
+          in: path
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+            example: 2
+      responses:
+        "200":
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200_4"
+        "404":
+          description: User not found
+        "500":
+          description: Server error
+      x-swagger-router-controller: Users
+    patch:
+      tags:
+        - users
+      summary: Update a specific user
+      description: Partially update a user. Only send the fields you want to change.
+      operationId: usersIdPATCH
+      parameters:
+        - name: id
+          in: path
+          description: ID of the user you want to update
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+            example: 2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/users_id_body"
+        required: true
+      responses:
+        "200":
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200_5"
+        "400":
+          description: Invalid input
+        "404":
+          description: User not found
+        "500":
+          description: Server error
+      x-swagger-router-controller: Users
+  /users/{id}/cart:
+    get:
+      tags:
+        - users
+      summary: Retrieve a user's cart
+      description: Returns all items in the cart for a specific user
+      operationId: usersIdCartGET
+      parameters:
+        - name: id
+          in: path
+          description: ID of the user
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+            example: 2
+      responses:
+        "200":
+          description: Cart retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200_6"
+      x-swagger-router-controller: Users
+    post:
+      tags:
+        - users
+      summary: Add a product to the users cart
+      description: Adds a product to the user's cart
+      operationId: usersIdCartPOST
+      parameters:
+        - name: id
+          in: path
+          description: ID of the user
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+            example: 2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/id_cart_body"
+        required: true
+      responses:
+        "201":
+          description: Product added to the cart
+        "404":
+          description: Use or product not found
+      x-swagger-router-controller: Users
+  /users/{id}/cart/{productId}:
+    delete:
+      tags:
+        - users
+      summary: Remove a product from the user's cart
+      description: Delete a specific product from the user's cart
+      operationId: usersIdCartProductIdDELETE
+      parameters:
+        - name: id
+          in: path
+          description: ID of the user
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+            example: 2
+        - name: productId
+          in: path
+          description: ID of the product in the cart
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+            example: 7
+      responses:
+        "204":
+          description: Cart item deleted successfully
+        "404":
+          description: Cart item not found
+      x-swagger-router-controller: Users
+    patch:
+      tags:
+        - users
+      summary: Update the quantity of a cart item
+      description: Updates the quantity of a specific item in the user's cart
+      operationId: usersIdCartProductIdPATCH
+      parameters:
+        - name: id
+          in: path
+          description: ID of the user
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+            example: 2
+        - name: productId
+          in: path
+          description: ID of the cart item
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+            example: 33
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/cart_productId_body"
+        required: true
+      responses:
+        "200":
+          description: Cart item updated successfully
+        "404":
+          description: Cart item not found
+      x-swagger-router-controller: Users
+  /products:
+    get:
+      tags:
+        - products
+      summary: Retreve all products
+      description: Returns a list of all products available in the store
+      operationId: productsGET
+      responses:
+        "200":
+          description: Products retrieve successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/inline_response_200_7"
+                x-content-type: application/json
+      x-swagger-router-controller: Products
+  /products/{id}:
+    get:
+      tags:
+        - products
+      summary: Retrieve a specific product
+      description: Returns a single product from the store
+      operationId: productsIdGET
+      parameters:
+        - name: id
+          in: path
+          description: ID of the product
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+            example: 7
+      responses:
+        "200":
+          description: Product retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200_8"
+        "404":
+          description: Product not found
+      x-swagger-router-controller: Products
+    delete:
+      tags:
+        - products
+      summary: Delete a product
+      description: Removes a product from the store
+      operationId: productsIdDELETE
+      parameters:
+        - name: id
+          in: path
+          description: ID of the product
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+            example: 7
+      responses:
+        "204":
+          description: Product deleted successfully
+        "404":
+          description: Product not found
+      x-swagger-router-controller: Products
+    patch:
+      tags:
+        - products
+      summary: Update a specific product
+      description: Updates one or more fields of a product in the store
+      operationId: productsIdPATCH
+      parameters:
+        - name: id
+          in: path
+          description: ID of the product
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+            example: 7
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/products_id_body"
+        required: true
+      responses:
+        "200":
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_200_9"
+        "404":
+          description: Product not found
+      x-swagger-router-controller: Products
+components:
+  schemas:
+    auth_login_body:
+      required:
+        - identifier
+        - password
+      type: object
+      properties:
+        identifier:
+          type: string
+          description: Usernmae or email address
+          example: johndoe
+        password:
+          type: string
+          format: password
+          example: mySecurePassword123
+    auth_register_body:
+      required:
+        - email
+        - first_name
+        - last_name
+        - password
+        - username
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username max characters 20
+          example: johndoe
+        password:
+          type: string
+          format: password
+          example: mySecurePassword123
+        email:
+          type: string
+          description: User email
+          format: email
+        first_name:
+          type: string
+          description: Max characters 50
+        last_name:
+          type: string
+          description: Max characters 50
+    inline_response_201:
+      type: object
+      properties:
+        message:
+          type: string
+          example: User registered successfully
+      example:
+        message: User registered successfully
+    inline_response_200:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Logged out successfully
+      example:
+        message: Logged out successfully
+    auth_refresh_body:
+      required:
+        - refreshToken
+      type: object
+      properties:
+        refreshToken:
+          type: string
+          description: Valid refresh token
+          example: eyJhbGciOiJIUzI1niIsInR5cCI6IkpXVCJ9...
+    inline_response_200_1:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1niIsInR5cCI6IkpXVCJ9...
+      example:
+        accessToken: eyJhbGciOiJIUzI1niIsInR5cCI6IkpXVCJ9...
+    inline_response_200_2:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique ID of the user
+          example: 1
+        username:
+          type: string
+          example: johndoe
+        first_name:
+          type: string
+          example: john
+        last_name:
+          type: string
+          example: doe
+        role:
+          type: string
+          example: admin
+          enum:
+            - customer
+            - admin
+        created_at:
+          type: string
+          format: date-time
+          example: 2026-02-25T18:30:00Z
+      example:
+        role: admin
+        last_name: doe
+        created_at: 2026-02-25T18:30:00Z
+        id: 1
+        first_name: john
+        username: johndoe
+    inline_response_200_3:
+      type: object
+      properties:
+        username:
+          type: string
+          example: johndoe
+        first_name:
+          type: string
+          example: john
+        last_name:
+          type: string
+          example: doe
+        role:
+          type: string
+          example: admin
+          enum:
+            - customer
+            - admin
+        date_created:
+          type: string
+          format: date-time
+          example: 2026-02-25T18:30:00Z
+      example:
+        role: admin
+        date_created: 2026-02-25T18:30:00Z
+        last_name: doe
+        first_name: john
+        username: johndoe
+    inline_response_200_4:
+      type: object
+      properties:
+        message:
+          type: string
+          example: User deleted successfully
+      example:
+        message: User deleted successfully
+    users_id_body:
+      type: object
+      properties:
+        username:
+          type: string
+          example: johndoe
+        first_name:
+          type: string
+          example: john
+        last_name:
+          type: string
+          example: doe
+        role:
+          type: string
+          example: admin
+          enum:
+            - customer
+            - admin
+    inline_response_200_5:
+      type: object
+      properties:
+        message:
+          type: string
+          example: User updated successfully
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 2
+            username:
+              type: string
+              example: johndow
+            first_name:
+              type: string
+              example: John
+            last_name:
+              type: string
+              example: Doe
+            role:
+              type: string
+              example: admin
+              enum:
+                - customer
+                - admin
+            created_at:
+              type: string
+              format: date-time
+              example: 2026-02-25T18:30:00Z
+          example:
+            role: admin
+            last_name: Doe
+            created_at: 2026-02-25T18:30:00Z
+            id: 2
+            first_name: John
+            username: johndow
+      example:
+        message: User updated successfully
+        user:
+          role: admin
+          last_name: Doe
+          created_at: 2026-02-25T18:30:00Z
+          id: 2
+          first_name: John
+          username: johndow
+    inline_response_200_6:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 10
+        user_id:
+          type: integer
+          example: 2
+        created_at:
+          type: string
+          format: date-time
+          example: 2026-03-05T18:22:10Z
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 33
+              cart_id:
+                type: integer
+                example: 10
+              product_id:
+                type: integer
+                example: 7
+              quantity:
+                type: integer
+                example: 3
+            example:
+              cart_id: 10
+              quantity: 3
+              product_id: 7
+              id: 33
+      example:
+        user_id: 2
+        created_at: 2026-03-05T18:22:10Z
+        id: 10
+        items:
+          - cart_id: 10
+            quantity: 3
+            product_id: 7
+            id: 33
+          - cart_id: 10
+            quantity: 3
+            product_id: 7
+            id: 33
+    id_cart_body:
+      required:
+        - product_id
+        - quantity
+      type: object
+      properties:
+        product_id:
+          type: integer
+          example: 7
+        quantity:
+          type: integer
+          example: 2
+    cart_productId_body:
+      required:
+        - quantity
+      type: object
+      properties:
+        quantity:
+          type: integer
+          example: 5
+    inline_response_200_7:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 7
+        name:
+          type: string
+          example: 3 Star Dragon Ball
+        price:
+          type: number
+          format: float
+          example: 24.99
+      example:
+        price: 24.99
+        name: 3 Star Dragon Ball
+        id: 7
+    inline_response_200_8:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 7
+        name:
+          type: string
+          example: 3 star Dragon Ball
+        description:
+          type: string
+          example: Dragon Ball collectible from the series
+        price:
+          type: number
+          format: float
+          example: 24.99
+      example:
+        price: 24.99
+        name: 3 star Dragon Ball
+        description: Dragon Ball collectible from the series
+        id: 7
+    products_id_body:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 4 star Dragon Ball
+        description:
+          type: string
+          example: Dragon Ball collectible from the series
+        price:
+          type: number
+          format: float
+          example: 24.99
+    inline_response_200_9:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 7
+        name:
+          type: string
+          example: 4 Star Dragon Ball
+        "description:":
+          type: string
+          example: Dragon Ball
+        price:
+          type: number
+          format: float
+          example: 24.99
+      example:
+        "description:": Dragon Ball
+        price: 24.99
+        name: 4 Star Dragon Ball
+        id: 7
