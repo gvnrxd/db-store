@@ -9,6 +9,8 @@ app.use(express.urlencoded({ extended: true })); // parse form data
 
 // Routes
 const userRoutes = require("./routes/user.js");
+const productRoutes = require("./routes/products.js");
+const authRoutes = require("./routes/auth.js");
 
 // Swagger
 const swaggerUi = require("swagger-ui-express");
@@ -17,13 +19,17 @@ const swaggerDocument = YAML.load(
   "./nodejs-server-server-generated/api/openapi.yaml",
 );
 
-app.get("/", (req, res, next) => {
-  res.send("Hello World!");
+app.get("/", (req, res) => {
+  res.redirect("/docs");
 });
+
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use("/users", userRoutes);
 
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use("/products", productRoutes);
+
+app.use("/auth", authRoutes);
 
 app.listen(PORT, () => {
   console.log(`Db store listening on port ${PORT}`);
